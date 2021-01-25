@@ -1,31 +1,20 @@
 """Define app models."""
 
-from typing import Dict
 from app import db
 
 
-class BaseModel(db.Model):
-    """Base model with default columns and method to return model properties as dict."""
-
-    __abstract__ = True
-
-    created_at = db.Column(db.DateTime, default=db.func.now())
-    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
-
-    def to_dict(self) -> Dict:
-        """Create model columns dict.
-
-        Args: self (model)
-        Returns: property dict
-        """
-        data = {}
-        columns = self.__table__.columns.keys()
-        for key in columns:
-            data[key] = getattr(self, key)
-        return data
-
-
-class User(BaseModel):
-    """Representation of an initial (user) model."""
+class Artist(db.Model):
+    """Representation of an artist."""
 
     id = db.Column(db.Integer, primary_key=True)
+    metrics = db.relationship("Metric", backref="artist", lazy=True)
+
+
+class Metric(db.Model):
+    """Representation of a metric."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey("artist.id"), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    value = db.Column(db.Integer)
+    __table_args__ = (db.UniqueConstraint("artist_id", "date", name="_artist_date_uc"),)

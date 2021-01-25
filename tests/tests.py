@@ -1,13 +1,13 @@
 """Unit tests."""
 
-import json
-from os import environ
 import unittest
+import datetime
 
 from app.config import TestingConfig
 from app import create_app
 from app import db
-from app.models.models import User
+
+from app.models.models import Metric
 
 
 class TestSetup(unittest.TestCase):
@@ -30,11 +30,6 @@ class TestSetup(unittest.TestCase):
 class TestBasic(TestSetup):
     """Basic default tests."""
 
-    def test_root(self):
-        """Test that app root responds properly."""
-        response = self.app.test_client().get("/")
-        self.assertEqual(response.status_code, 200)
-
     def test_ping(self):
         """Test that app can be pinged wth GET and POST."""
         response = self.app.test_client().get("/ping")
@@ -42,57 +37,31 @@ class TestBasic(TestSetup):
         response = self.app.test_client().post("/ping")
         self.assertEqual(response.status_code, 200)
 
-    def test_protected(self):
-        """Test that protected resource can be accessed with api key or origin."""
-        response = self.app.test_client().get("/protected")
-        self.assertEqual(response.status_code, 401)
 
-        key = "bad_key"
-        response = self.app.test_client().get("/protected", headers={"API_KEY": key})
-        self.assertEqual(response.status_code, 401)
+class TestMetrics(TestSetup):
+    """Test metrics route."""
 
-        key = environ.get("API_KEY")
-        response = self.app.test_client().get("/protected", headers={"API_KEY": key})
+    def test_route(self):
+        # Create data
+        for i in range(100):
+            for j in range(1000):
+                date = datetime.date.today() - datetime.timedelta(j)
+                value = (1000 - j) / (i + 1)
+                db.session.add(Metric(artist_id=i+1, date=date, value=value))
+        db.session.commit()
+
+        # Call endpoint and record performance
+        start_time = datetime.datetime.now()
+        response = self.app.test_client().get("/metrics?metric_value=50")
+        end_time = datetime.datetime.now()
+        duration = (end_time - start_time)
+        print(f"Response time: {duration.total_seconds()}")
+
+        # Test response
         self.assertEqual(response.status_code, 200)
-
-        secure_origin = environ.get("SECURE_ORIGINS").split(",")[0]
-        response = self.app.test_client().get(
-            "/protected", headers={"Origin": secure_origin}
+        self.assertEqual(len(response.json), 100)
+        self.assertEqual(response.json[0]["artist_id"], 1)
+        self.assertEqual(
+            response.json[0]["crossings"][0],
+            (datetime.date.today() - datetime.timedelta(950)).strftime("%Y-%m-%d")
         )
-        self.assertEqual(response.status_code, 200)
-
-    def test_error(self):
-        """Return error response for missing user from API v1."""
-        key = environ.get("API_KEY")
-        response = self.app.test_client().get("/error", headers={"API_KEY": key})
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.get_data(as_text=True))
-        self.assertEqual(data["code"], 404)
-
-
-class TestUser(TestSetup):
-    """Tests for user model and respective routes."""
-
-    def test_creation(self):
-        """Add a user to the database."""
-        self.assertEqual(User.query.count(), 0)
-        db.session.add(User())
-        db.session.commit()
-        self.assertEqual(User.query.count(), 1)
-
-    def test_users_route(self):
-        """Get user count from API v1."""
-        key = environ.get("API_KEY")
-        response = self.app.test_client().get("/v1/users/", headers={"API_KEY": key})
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("0 entries in DB", str(response.data))
-
-    def test_user_route(self):
-        """Get single user with id from API v1."""
-        db.session.add(User())
-        db.session.commit()
-        key = environ.get("API_KEY")
-        response = self.app.test_client().get("/v1/users/1", headers={"API_KEY": key})
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.get_data(as_text=True))
-        self.assertEqual(data["id"], 1)
