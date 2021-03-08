@@ -4,10 +4,9 @@ import unittest
 import datetime
 
 from app.config import TestingConfig
-from app import create_app
-from app import db
+from app import create_app, db
 
-from app.models.models import Metric
+from app.models.models import Artist, Metric
 
 
 class TestSetup(unittest.TestCase):
@@ -44,6 +43,7 @@ class TestMetrics(TestSetup):
     def test_route(self):
         # Create data
         for i in range(100):
+            db.session.add(Artist())
             for j in range(1000):
                 date = datetime.date.today() - datetime.timedelta(j)
                 value = (1000 - j) / (i + 1)

@@ -1,12 +1,11 @@
 """Database migration and upgrade manager."""
 
-from flask_migrate import Migrate
-from flask_migrate import MigrateCommand
+from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 
-from app import config
-from app import create_app
-from app import db
+from app import config, create_app, db
+
+from app.models.models import Artist, Metric  # Required for first migration
 
 app = create_app(config.set_config())
 app.app_context().push()
