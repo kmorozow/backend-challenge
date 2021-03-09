@@ -5,8 +5,8 @@ import datetime
 
 from app.config import TestingConfig
 from app import create_app, db
-
-from app.models.models import Artist, Metric
+from app.helpers import timer
+from app.models import Artist, Metric
 
 
 class TestSetup(unittest.TestCase):
@@ -41,23 +41,23 @@ class TestMetrics(TestSetup):
     """Test metrics route."""
 
     def test_route(self):
-        # Create data
-        for i in range(100):
-            db.session.add(Artist())
-            for j in range(1000):
-                date = datetime.date.today() - datetime.timedelta(j)
-                value = (1000 - j) / (i + 1)
-                db.session.add(Metric(artist_id=i+1, date=date, value=value))
-        db.session.commit()
+        """Test that metrics route returns expected artist crossings."""
+        @timer(1)
+        def create_data():
+            for i in range(100):
+                db.session.add(Artist())
+                for j in range(1000):
+                    date = datetime.date.today() - datetime.timedelta(j)
+                    value = (1000 - j) / (i + 1)
+                    db.session.add(Metric(artist_id=i+1, date=date, value=value))
+            db.session.commit()
 
-        # Call endpoint and record performance
-        start_time = datetime.datetime.now()
-        response = self.app.test_client().get("/metrics?metric_value=50")
-        end_time = datetime.datetime.now()
-        duration = (end_time - start_time)
-        print(f"Response time: {duration.total_seconds()}")
+        @timer(10)
+        def call_endpoint(self):
+            return self.app.test_client().get("/metrics?metric_value=50")
 
-        # Test response
+        create_data()
+        response = call_endpoint(self)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json), 100)
         self.assertEqual(response.json[0]["artist_id"], 1)

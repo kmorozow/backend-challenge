@@ -27,5 +27,6 @@ def create_app(config_class: object):
     @app.route("/metrics", methods=["GET"])
     def metrics() -> List:
         """IMPLEMENT YOUR SOLUTION HERE."""
+        return ""
 
     return app

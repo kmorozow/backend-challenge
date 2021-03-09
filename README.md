@@ -2,7 +2,7 @@
 
 ## Task
 
-Imagine a simple Flask app with a database managed by SQLAlchemy and the models/tables described in `app/models/models.py`.
+Imagine a simple Flask app with a database managed by SQLAlchemy and the models/tables described in `app/models.py`.
 
 Please write an API endpoint as a new /metrics route defined in `app/__init__.py` that accepts a GET request with a "metric_value" parameter and returns all days when any existing artist 'crossed' that metric value, i.e. when the artist's metric_value on that day is larger than or equal to and its value on the previous day is lower than the passed parameter value.
 
