@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "flask-template"
+name = "backend-challenge"
 version = "0.1.0"
 description = ""
 authors = ["Nikolas Schriefer <info@nikolasschriefer.de>"]
@@ -12,8 +12,6 @@ flask-migrate = "^2.5.3"
 flask-script = "^2.0.6"
 flask-sqlalchemy = "^2.4.3"
 psycopg2-binary = "^2.8.5"
-zappa = "^0.51.0"
-flask-restx = "^0.2.0"
 
 [tool.poetry.dev-dependencies]
 python-dotenv = "^0.14.0"
