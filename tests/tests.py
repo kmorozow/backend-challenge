@@ -4,7 +4,8 @@ import unittest
 import datetime
 
 from app.config import TestingConfig
-from app import create_app, db
+from app import create_app
+from app.models import db
 from app.helpers import timer
 from app.models import Artist, Metric
 
